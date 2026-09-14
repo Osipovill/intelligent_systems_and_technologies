@@ -1,0 +1,2 @@
+# intelligent_systems_and_technologies
+Осипов Илья
