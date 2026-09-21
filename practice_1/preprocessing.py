@@ -1,4 +1,4 @@
-"""Reusable preprocessing components for the smartphone preference model."""
+"""Компоненты предварительной обработки данных для модели предпочтений смартфона."""
 
 from __future__ import annotations
 
@@ -13,12 +13,13 @@ from sklearn.utils.validation import check_is_fitted
 
 
 class MultiHotEncoder(BaseEstimator, TransformerMixin):
-    """Encode a semicolon-separated column as independent binary features."""
+    """Преобразует разделённые точкой с запятой ответы в бинарные признаки."""
 
     def __init__(self, separator: str = ";") -> None:
         self.separator = separator
 
     def fit(self, X, y=None):
+        """Определяет словарь категорий по обучающей выборке."""
         values = self._as_series(X)
         categories = sorted(
             {
@@ -34,10 +35,12 @@ class MultiHotEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        """Кодирует ответы по словарю категорий, полученному при обучении."""
         check_is_fitted(self, ["categories_", "_category_to_index"])
         values = self._as_series(X)
         encoded = np.zeros((len(values), len(self.categories_)), dtype=np.float64)
 
+        # Неизвестные категории пропускаются, сохраняя размерность пространства признаков.
         for row_index, value in enumerate(values):
             for token in self._split(value):
                 category_index = self._category_to_index.get(token)
@@ -47,6 +50,7 @@ class MultiHotEncoder(BaseEstimator, TransformerMixin):
         return encoded
 
     def get_feature_names_out(self, input_features=None):
+        """Возвращает имена бинарных признаков в формате scikit-learn."""
         check_is_fitted(self, ["categories_"])
         if input_features is None:
             feature_name = "feature"
@@ -62,6 +66,7 @@ class MultiHotEncoder(BaseEstimator, TransformerMixin):
 
     @staticmethod
     def _as_series(X) -> pd.Series:
+        """Приводит входные данные к единственному столбцу pandas.Series."""
         if isinstance(X, pd.DataFrame):
             if X.shape[1] != 1:
                 raise ValueError("MultiHotEncoder expects exactly one input column")
@@ -79,6 +84,7 @@ class MultiHotEncoder(BaseEstimator, TransformerMixin):
         return pd.Series(values)
 
     def _split(self, value) -> set[str]:
+        """Разделяет составной ответ и удаляет пустые элементы."""
         if value is None or pd.isna(value):
             return set()
         return {
@@ -93,7 +99,7 @@ def make_preprocessor(
     categorical_features: Sequence[str],
     multi_select_feature: str,
 ) -> ColumnTransformer:
-    """Build the feature preprocessing used by the KNN pipeline."""
+    """Формирует конвейер обработки числовых и категориальных признаков."""
 
     return ColumnTransformer(
         [
