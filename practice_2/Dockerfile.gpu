@@ -1,0 +1,6 @@
+FROM quay.io/jupyter/scipy-notebook:x86_64-2025-05-30
+
+# Устанавливает закреплённый CUDA 12 backend и заголовки CUDA один раз при сборке образа
+RUN pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com \
+    nx-cugraph-cu12==25.4.0 \
+    "cupy-cuda12x[ctk]==14.2.0"
