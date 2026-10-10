@@ -1,0 +1,15 @@
+user_id,input_ref,screen_name,first_name,last_name,is_closed,deactivated,friends_status,friends_count,list_source
+357111839,andrew.kirillov,andrew.kirillov,Andrey,Kirillov,False,,loaded,256,api:2026-10-10T20:49:21.340458+00:00
+447383697,bignigga,bignigga,Igor,Susarov,False,,loaded,104,api:2026-10-10T20:49:21.849668+00:00
+365680993,y.doyneko,y.doyneko,Yulia,Doyneko,False,,profile_closed,,api:2026-10-10T20:49:22.354989+00:00
+223966628,saulinivan,saulinivan,Ivan,Saulin,False,,loaded,153,api:2026-10-10T20:49:22.858299+00:00
+299547783,dimitr101,dimitr101,Dmitry,Poluektov,False,,profile_closed,,api:2026-10-10T20:49:23.358507+00:00
+288851914,ku_ku_riz,ku_ku_riz,Denis,Davydov,False,,loaded,105,api:2026-10-10T20:49:23.865971+00:00
+465105120,medvediano,medvediano,Ilya,Medvedev,False,,loaded,181,cache:collect_state.json
+198182178,flashik12,flashik12,Alexander,Ershov,True,,profile_closed,,cache:collect_state.json
+473310225,0pupok00,0pupok00,Lia,Martynova,False,,loaded,177,cache:collect_state.json
+424935969,ryosuk3,ryosuk3,Vladimir,Romanenko,False,,loaded,30,cache:collect_state.json
+139159408,id139159408,id139159408,Daniil,Nisanov,False,,loaded,275,api:2026-10-10T20:49:24.353939+00:00
+236434667,dedvnutree,dedvnutree,Alexander,Goloktionov,True,,profile_closed,,api:2026-10-10T20:49:24.413141+00:00
+270876280,votkakblat,votkakblat,Gleb,Boltnev,True,,profile_closed,,api:2026-10-10T20:49:24.476093+00:00
+397017302,sh3rryy,sh3rryy,Alexander,Artamonov,True,,profile_closed,,api:2026-10-10T20:49:24.546500+00:00
