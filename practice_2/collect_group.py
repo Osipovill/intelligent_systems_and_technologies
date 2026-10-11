@@ -14,18 +14,23 @@ from urllib.parse import urlparse
 import requests
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent
+from config import (
+    API_URL,
+    API_VERSION,
+    BASE_DIR,
+    FRIENDS_PAGE_SIZE,
+    GROUP_DATA_DIR,
+    GROUP_IDS_PATH,
+    LEGACY_MEMBERS,
+    PROFILE_BATCH_SIZE,
+    PROFILE_FIELDS,
+    REQUEST_INTERVAL,
+    SNAPSHOT_VERSION,
+    sha256_file,
+)
+
 # Известные ID команды помогают переиспользовать её кеш при разрешении ссылок.
-TEAM_MEMBERS = {
-    198182178: "flashik12", 473310225: "0pupok00",
-    424935969: "ryosuk3", 465105120: "medvediano",
-}
-API_URL = "https://api.vk.com/method/"
-API_VERSION = "5.199"
-PROFILE_FIELDS = "screen_name"
-PROFILE_BATCH_SIZE = 500
-FRIENDS_PAGE_SIZE = 5000
-REQUEST_INTERVAL = 0.5
+TEAM_MEMBERS = LEGACY_MEMBERS
 TERMINAL_STATUSES = {"loaded", "profile_closed", "access_denied", "deactivated"}
 CSV_COLUMNS = [
     "user_id", "friend_id", "observation_level", "user_screen_name",
@@ -383,11 +388,17 @@ def build_csv(state, output_path, members):
 
 
 def export_collection(state, data_dir, members, completed, client):
-    rows, direct_ids, second_ids = build_csv(state, data_dir / "vk_friends_full.csv", members)
+    output_path = data_dir / "vk_friends_full.csv"
+    rows, direct_ids, second_ids = build_csv(state, output_path, members)
     requested_ids = set(members) | direct_ids
-    graph_completed = all(
+    friend_lists_completed = all(
         state["list_statuses"].get(str(uid)) in TERMINAL_STATUSES
         for uid in requested_ids
+    )
+    graph_completed = friend_lists_completed
+    friend_lists_available = all(
+        state["list_statuses"].get(str(uid)) == "loaded"
+        for uid in members
     )
     pending_profiles = sum(
         str(uid) not in state["profiles"]
@@ -409,9 +420,16 @@ def export_collection(state, data_dir, members, completed, client):
         })
     atomic_csv(data_dir / "members.csv", MEMBER_COLUMNS, member_rows)
     save_state(data_dir / "collection_summary.json", {
-        "completed": completed, "graph_completed": graph_completed,
+        "snapshot_version": SNAPSHOT_VERSION,
+        "completed": completed and graph_completed and profiles_completed and friend_lists_completed,
+        "graph_completed": graph_completed,
         "profiles_completed": profiles_completed,
+        "friend_lists_completed": friend_lists_completed,
+        "friend_lists_available": friend_lists_available,
+        "analysis_completed": False,
         "pending_profiles": pending_profiles,
+        "data_file": str(output_path.relative_to(BASE_DIR)).replace("\\", "/"),
+        "data_sha256": sha256_file(output_path),
         "exported_at": utc_now(), "api_version": API_VERSION,
         "members": len(members), "direct_ids_including_members": len(direct_ids),
         "second_circle": len(second_ids), "observations": rows,
@@ -424,12 +442,13 @@ def export_collection(state, data_dir, members, completed, client):
                  len(members), len(direct_ids), len(second_ids), rows, completed)
 
 
-def run_collection(data_dir, members_csv, cache_from=None, interval=REQUEST_INTERVAL,
-                   max_attempts=5, max_requests=None, env_path=None, retry_unavailable=False):
+def run_collection(data_dir, members_csv=None, cache_from=None, interval=REQUEST_INTERVAL,
+                   max_attempts=5, max_requests=None, env_path=None,
+                   retry_unavailable=False, member_refs=None):
     data_dir.mkdir(parents=True, exist_ok=True)
     state_path = data_dir / "collect_state.json"
     state = load_state(state_path)
-    refs = read_member_refs(members_csv)
+    refs = list(member_refs) if member_refs is not None else read_member_refs(members_csv)
     if state.get("member_refs", refs) != refs:
         raise ValueError("Checkpoint belongs to a different member list; choose a new --data-dir")
     state["member_refs"] = refs
@@ -466,8 +485,8 @@ def run_collection(data_dir, members_csv, cache_from=None, interval=REQUEST_INTE
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--members-csv", type=Path, default=BASE_DIR / "data" / "group_ids.csv")
-    parser.add_argument("--data-dir", type=Path, default=BASE_DIR / "data" / "group")
+    parser.add_argument("--members-csv", type=Path, default=GROUP_IDS_PATH)
+    parser.add_argument("--data-dir", type=Path, default=GROUP_DATA_DIR)
     parser.add_argument("--cache-from", type=Path, default=BASE_DIR / "data" / "collect_state.json")
     parser.add_argument("--env-file", type=Path, default=BASE_DIR / ".env")
     parser.add_argument("--interval", type=float, default=REQUEST_INTERVAL)

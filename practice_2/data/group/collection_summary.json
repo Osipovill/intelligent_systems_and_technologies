@@ -1,17 +1,47 @@
 {
+  "snapshot_version": "2.1",
   "completed": false,
   "graph_completed": true,
   "profiles_completed": false,
+  "friend_lists_completed": true,
+  "friend_lists_available": false,
+  "analysis_completed": true,
   "exported_at": "2026-10-10T21:01:13.848914+00:00",
   "api_version": "5.199",
   "members": 14,
   "direct_ids_including_members": 1224,
   "second_circle": 205086,
   "observations": 234450,
+  "data_file": "data/group/vk_friends_full.csv",
+  "data_sha256": "76a9fc815683034e3034e44327f69bfa4f311bf0f569b92703fd92a50fc6e6c1",
   "requests_this_run": 1,
   "request_interval": 1.5,
   "cache_source": "data/collect_state.json",
   "cache_collected_at": "2026-09-30 05:43:13",
   "note": "Cached lists retain their original snapshot; unavailable lists are not empty friend lists.",
-  "pending_profiles": 24483
+  "pending_profiles": 24483,
+  "analysis": {
+    "calculation": {
+      "nodes": 206317,
+      "edges": 232515,
+      "betweenness_k": 128,
+      "seed": 42,
+      "backend": "networkx",
+      "networkx_version": "3.4.2",
+      "closeness": "exact, Wasserman-Faust correction",
+      "eigenvector": "global sparse power iteration (A+I), L2, tol=1e-9"
+    },
+    "graph": {
+      "nodes": 206317,
+      "edges": 232515,
+      "components": 1,
+      "largest_component_nodes": 206317,
+      "members": 14,
+      "members_in_largest_component": 14,
+      "largest_component_member_share": 1.0,
+      "isolated_members": 0,
+      "direct_friends_outside_group": 1217,
+      "second_circle_vertices": 205086
+    }
+  }
 }
