@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from dotenv import load_dotenv
 
 
 # Участники задают канонический порядок родителей в итоговом наборе данных
@@ -24,6 +25,7 @@ PROFILE_FIELDS = "screen_name,is_closed,deactivated"
 PROFILE_BATCH_SIZE = 500
 REQUEST_INTERVAL = 0.35
 TOKEN_COOLDOWN = 60
+FRIENDS_PAGE_SIZE = 5000
 CSV_COLUMNS = [
     "user_id", "friend_id", "observation_level", "user_screen_name",
     "user_is_group_member", "friend_first_name", "friend_last_name",
@@ -41,6 +43,7 @@ def configure_logging():
 
 def load_tokens():
     """Читает сервисные токены из окружения, не сохраняя их в файлах"""
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
     tokens = [token.strip() for token in os.environ.get("VK_SERVICE_TOKENS", "").split(",") if token.strip()]
     if not tokens:
         token = os.environ.get("VK_SERVICE_TOKEN", "").strip()
@@ -176,18 +179,43 @@ def collect_friend_lists(client, state, user_ids, list_name, state_path):
             statuses[key] = "profile_closed"
             state_changed = True
             continue
-        response = client.call("friends.get", {"user_id": user_id, "count": 10000})
-        if response.get("__profile_closed__"):
-            lists[key] = []
-            statuses[key] = "profile_closed"
-        elif "__error__" in response:
-            code = response["__error__"].get("error_code", -1)
-            lists[key] = []
-            statuses[key] = f"error_{code}"
-            logging.error("friends.get failed for %s: %s", user_id, response["__error__"].get("error_msg", "unknown error"))
-        else:
-            lists[key] = [friend_id for friend_id in response.get("items", []) if isinstance(friend_id, int)]
-            statuses[key] = "loaded"
+        friend_ids = []
+        offset = 0
+        status = "loaded"
+        while True:
+            response = client.call(
+                "friends.get",
+                {"user_id": user_id, "count": FRIENDS_PAGE_SIZE, "offset": offset},
+            )
+            if response.get("__profile_closed__"):
+                status = "profile_closed"
+                friend_ids = []
+                break
+            if "__error__" in response:
+                code = response["__error__"].get("error_code", -1)
+                status = f"error_{code}"
+                friend_ids = []
+                logging.error(
+                    "friends.get failed for %s: %s",
+                    user_id,
+                    response["__error__"].get("error_msg", "unknown error"),
+                )
+                break
+
+            items = [friend_id for friend_id in response.get("items", []) if isinstance(friend_id, int)]
+            friend_ids.extend(items)
+            total = int(response.get("count", len(friend_ids)))
+            offset += len(items)
+            if offset >= total:
+                break
+            if not items:
+                status = "error_incomplete_pagination"
+                friend_ids = []
+                logging.error("friends.get returned an empty page before completion for %s", user_id)
+                break
+
+        lists[key] = sorted(set(friend_ids))
+        statuses[key] = status
         requests_since_save += 1
         state_changed = True
         if requests_since_save == 25:
