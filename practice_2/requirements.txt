@@ -1,0 +1,9 @@
+jupyterlab>=4.0
+matplotlib>=3.7
+networkx>=3.2,<4
+numpy>=1.26
+nbconvert>=7.0
+pandas>=2.1
+python-dotenv>=1.0
+requests>=2.31
+scipy>=1.11
