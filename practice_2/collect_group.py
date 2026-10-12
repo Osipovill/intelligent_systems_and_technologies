@@ -29,6 +29,7 @@ from config import (
     sha256_file,
 )
 
+
 # Известные ID команды помогают переиспользовать её кеш при разрешении ссылок.
 TEAM_MEMBERS = LEGACY_MEMBERS
 TERMINAL_STATUSES = {"loaded", "profile_closed", "access_denied", "deactivated"}
