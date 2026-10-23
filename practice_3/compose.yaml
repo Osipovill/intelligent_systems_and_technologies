@@ -1,0 +1,25 @@
+services:
+  jupyter:
+    mem_limit: 2g
+    memswap_limit: 2g
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    container_name: practice3-jupyter-bootstrap
+    working_dir: /home/jovyan/practice_3
+    command: start-notebook.py --ServerApp.ip=0.0.0.0 --ServerApp.port=8888
+    ports:
+      - "127.0.0.1:8890:8888"
+    volumes:
+      - .:/home/jovyan/practice_3
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:?Set DOCKER_GID to the host Docker socket group id}"
+    environment:
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN:?Set a strong JUPYTER_TOKEN in the environment}
+    networks:
+      - practice3-private
+networks:
+  practice3-private:
+    external: true
+    name: practice3-private
